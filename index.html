@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>To Do List</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 30px;
+    }
+    h1 { font-size: 24px; margin: 0 0 15px; }
+    .controls {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      margin-bottom: 16px;
+    }
+    input, button { padding: 8px 10px; font-size: 16px; }
+    .add-btn {
+      background: #4CAF50; color: #fff; border: none; border-radius: 6px; cursor: pointer;
+    }
+    .add-btn:hover { background: #3f9d44; }
+    .todo-list { width: 420px; max-width: 95vw; }
+    .todo-item {
+      background: #fff; padding: 10px 12px; margin: 10px 0;
+      border-radius: 10px; display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      gap: 12px;
+    }
+    .todo-main { display: grid; gap: 4px; }
+    .todo-text { font-size: 16px; word-break: break-word; }
+    .todo-dt { font-size: 13px; color: #666; }
+    .delete-btn {
+      background: #e53935; color: #fff; border: none; padding: 6px 10px;
+      border-radius: 6px; cursor: pointer; flex-shrink: 0;
+    }
+    .delete-btn:hover { background: #c62828; }
+  </style>
+</head>
+<body>
+  <h1>To Do List</h1>
+
+  <div class="controls">
+    <input placeholder="Task name" class="js-name-input" />
+    <input type="date" class="js-date-input" />
+    <input type="time" class="js-time-input" />
+    <button class="add-btn" id="add-btn">Add</button>
+  </div>
+
+  <div class="todo-list js-todo-list"></div>
+
+  <script>
+    // Empty task list
+    const todoList = [];
+
+    const nameEl = document.querySelector('.js-name-input');
+    const dateEl = document.querySelector('.js-date-input');
+    const timeEl = document.querySelector('.js-time-input');
+    const listEl = document.querySelector('.js-todo-list');
+
+    // Set default date/time to now
+    (function setDefaults() {
+      const now = new Date();
+      dateEl.value = now.toISOString().slice(0,10); // YYYY-MM-DD
+      timeEl.value = now.toTimeString().slice(0,5); // HH:MM
+    })();
+
+    function formatDateTime(dateStr, timeStr) {
+      const safeTime = timeStr && timeStr.trim() ? timeStr : '00:00';
+      const dt = new Date(`${dateStr}T${safeTime}`);
+      const opts = { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+      return isNaN(dt.getTime()) ? `${dateStr} ${safeTime}` : dt.toLocaleString(undefined, opts);
+    }
+
+    function renderTodoList() {
+      let html = '';
+      for (let i = 0; i < todoList.length; i++) {
+        const { name, date, time } = todoList[i];
+        html += `
+          <div class="todo-item">
+            <div class="todo-main">
+              <div class="todo-text">${name}</div>
+              <div class="todo-dt">${formatDateTime(date, time)}</div>
+            </div>
+            <button class="delete-btn" data-index="${i}">Delete</button>
+          </div>
+        `;
+      }
+      listEl.innerHTML = html;
+    }
+
+    function addTodo() {
+      const name = (nameEl.value || '').trim();
+      const now = new Date();
+      const date = (dateEl.value || now.toISOString().slice(0,10));
+      const time = (timeEl.value || now.toTimeString().slice(0,5));
+
+      if (!name) {
+        nameEl.focus();
+        return;
+      }
+      todoList.push({ name, date, time });
+      nameEl.value = '';
+      dateEl.value = new Date().toISOString().slice(0,10);
+      timeEl.value = new Date().toTimeString().slice(0,5);
+      renderTodoList();
+    }
+
+    // Event listeners
+    document.getElementById('add-btn').addEventListener('click', addTodo);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addTodo();
+    });
+    listEl.addEventListener('click', (e) => {
+      if (e.target.matches('.delete-btn')) {
+        const idx = Number(e.target.dataset.index);
+        if (!Number.isNaN(idx)) {
+          todoList.splice(idx, 1);
+          renderTodoList();
+        }
+      }
+    });
+
+    renderTodoList();
+  </script>
+</body>
+</html>
